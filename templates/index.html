@@ -92,20 +92,36 @@
     </style>
     <script>
         $(document).ready(function () {
-            showTodo();
+            userCheck(JWT); // JWT 어떻게 쓰는지 알아보고 파라미터 변경할 것
         });
 
-        function userCheck() {
-            // JWT
-            let userStatusHTML =`
+        function userCheck(JWT) {
+            // JWT 보유하고 있는지 확인하는 코드
+            // 있는 경우, userStatus에 logout 넣고 showTodo() 실행
+            // 없는 경우, userStatus에 sign in, sign up 넣고 class middle 삭제 후 이미지 하나 보여주기?
+            if (JWT) {
+                let userStatusHTML = `
+                <div class="logout">
+                    <a onclick="">logout</a>
+                </div>`
+                document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
+                showTodo()
+            } else {
+                let userStatusHTML = `
                 <div class="signin">
                     <a onclick="">sign in</a>
                 </div>
                 <div class="signup">
                     <a onclick="">sign up</a>
                 </div>`
+                document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
+                document.querySelector(".middle").remove()
+                let imageHTML = `
+                <img class=imageLanding src="" alt=""/>`
+                document.querySelector(".bottom").insertAdjacentHTML("beforeend", imageHTML)
+            }            
         }
-
+        
         function showTodo() {
             fetch('/todo').then(res => res.json()).then(data => {
                 //console.log(data['get'])
