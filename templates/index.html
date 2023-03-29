@@ -96,51 +96,43 @@
         });
 
         function userCheckAndDisplay() {
-            // JWT 보유하고 있는지 확인하는 코드
             // 있는 경우, userStatus에 logout 넣고 showTodo() 실행
             // 없는 경우, userStatus에 sign in, sign up 넣고 class middle 삭제 후 이미지 하나 보여주기?
-
-            // cookie에서 token 값 불러오기
-            const token = getTokenFromCookie()
-            console.log(token)
             let userId = ''
-            fetch('/signin', { headers: { 'authorization': `Bearer ${token}` } }).then(res => res.json()).then(data => {
-                userId = data['userId']
-            })
+            fetch('/auth/signin')
+                .then(res => res.json())
+                .then((data) => {
+                    userId = data['userId']
+                    console.log(userId)
 
-            if (userId) {
-                let userStatusHTML = `
-                    <div>
-                        <p class="showUserId">Hi! ${userId}, </p>
-                    </div>
-                    <div class="signout">
-                        <a onclick=signOut(${token})>sign out</a>
-                    </div>`
-                document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
-                showToDo(token)
-            } else {
-                let userStatusHTML = `
-                    <div class="signin">
-                        <a onclick=signIn()>sign in</a>
-                    </div>
-                    <div class="signup">
-                        <a onclick=signUp()>sign up</a>
-                    </div>`
-                document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
-                document.querySelector(".middle").remove()
-                let imageHTML = `
+                    if (userId) {
+                        console.log("asdf")
+                        let userStatusHTML = `
+                            <div>
+                                <p class="showUserId">Hi! ${userId}, </p>
+                            </div>
+                            <div class="signout">
+                                <a onclick=signOut()>sign out</a>
+                            </div>`
+                        document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
+                        showToDo()
+                    } else {
+                        console.log("qwer")
+                        let userStatusHTML = `
+                            <div class="signin">
+                                <a onclick=signIn()>sign in</a>
+                            </div>
+                            <div class="signup">
+                                <a onclick=signUp()>sign up</a>
+                            </div>`
+                        document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
+                        document.querySelector(".middle").remove()
+                        let imageHTML = `
                 <img class=imageLanding src="" alt=""/>`
-                document.querySelector(".bottom").insertAdjacentHTML("beforeend", imageHTML)
-            }
-        }
+                        document.querySelector(".bottom").insertAdjacentHTML("beforeend", imageHTML)
+                    }
+                })
 
-        function getTokenFromCookie() {
-            const cookie = `${document.cookie}`
-            const value = cookie.split('; token=')
-            let token = ''
-            if (value.length === 2) {
-                return value.pop().split(';').shift()
-            }
         }
 
         function signIn() {
@@ -151,27 +143,21 @@
             window.location.href = "/signup"
         }
 
-        // token을 저장한 쿠키의 만료일을 현재로 지정하고, /signout에 토큰 정보를 전달해서 서버에서 삭제하도록 요청, 후 결과를 받아 출력
+        // sign out
         function signOut() {
-            const token = getTokenFromCookie()
-            let now = new Date()
-            // token을 저장한 쿠키의 만료일을 현재로 지정
-            document.cookie = `token=${token}; expires=${now}`
-            // /signout에 토큰 정보를 전달해서 서버에서 삭제하도록 요청, 후 결과를 받아 출력
-            fetch('/signout', { method: "POST", headers: { 'authorization': `Bearer ${token}` } }).then(res => res.json()).then(data => {
-                console.log(data['res'])
-            })
+            document.cookie = "token=;"
             window.location.replace('/')
         }
 
-        // token을 받아서, ToDo 항목의 아이디, 내용, 상태의 어레이를 반환 받아 나열하는 HTML을 만들어 id=toDoList 에 하나씩 반복 추가
-        function showToDo(token) {
-            fetch('/todo', { headers: { 'authorization': `Bearer ${token}` } }).then(res => res.json()).then(data => {
+        // ToDo 항목의 아이디, 내용, 상태의 어레이를 반환 받아 나열하는 HTML을 만들어 id=toDoList 에 하나씩 반복 추가
+        function showToDo() {
+            fetch('/todo/list').then(res => res.json()).then(data => {
                 //console.log(data['get'])
-                let res = data['get']
+                let res = data['result']
                 res.forEach(element => {
+                    console.log(element)
                     let toDoId = element['_id']
-                    let toDo = element['todo']
+                    let toDo = element['toDo']
                     let status = element['status']
                     let sharedId = element['sharedId']
 
@@ -194,7 +180,7 @@
             }
 
             let toDoListHTML = `
-                        <li id=${toDoId}>
+                        <li id="id${toDoId}">
                             <h2 ${toDoClass}>✅ ${toDo}</h2>
                             <h5 class=shared> ${sharedId} </h5>
                             <button type="button" class="btn btn-outline-success" onclick="shareIdList(event)">공유</button>
@@ -207,39 +193,39 @@
 
         // ToDo 내용을 완료 표시 또는 완료 표시를 취소
         function toggleStatus(event) {
-            const token = getTokenFromCookie()
             let toDoId = event.target.closest('li').id
             //console.log(event.target.closest('li').id)
             let formData = new FormData()
-            formData.append("_id", toDoId)
-            fetch('/toggle', { method: "POST", body: formData, headers: { 'authorization': `Bearer ${token}` } }).then((response) => response.json()).then((data) => {
-                //console.log(data["msg"])
-                window.location.reload(); // 리로드 하지 않고, class와 버튼을 토글시키는 것이 더 좋을 것 같긴 한데...
-            })
+            formData.append("toDoId", toDoId.slice(2))
+            fetch('/todo/toggle', { method: "POST", body: formData, })
+                .then((response) => response.json())
+                .then((data) => {
+                    //console.log(data["msg"])
+                    window.location.reload(); // 리로드 하지 않고, class와 버튼을 토글시키는 것이 더 좋을 것 같긴 한데...
+                })
         }
 
         // ToDo 내용을 삭제
         function deleteToDo(event) {
-            const token = getTokenFromCookie()
             let toDoId = event.target.closest('li').id
             //console.log(event)
             let formData = new FormData()
-            formData.append("_id", toDoId)
-            fetch('/delete', { method: "POST", body: formData, headers: { 'authorization': `Bearer ${token}` } }).then((response) => response.json()).then((data) => {
-                //console.log(data["msg"])
-                window.location.reload(); // 리로드 하지않고 없애는 방법? querySelector로 해당 id html 삭제할 수 있지 않을까
-            })
+            formData.append("toDoId", toDoId.slice(2))
+            fetch('/todo/delete', { method: "POST", body: formData, })
+                .then((response) => response.json())
+                .then((data) => {
+                    //console.log(data["msg"])
+                    window.location.reload(); // 리로드 하지않고 없애는 방법? querySelector로 해당 id html 삭제할 수 있지 않을까
+                })
         }
 
         // 새로운 ToDo 내용을 입력
         function saveToDo() {
-            const token = getTokenFromCookie()
+            // 입력한 todo 값을 toDo에 저장
             let toDo = document.querySelector("#toDo").value
-            let status = 0;
             let formData = new FormData()
             formData.append("toDo", toDo)
-            formData.append("status", status)
-            fetch('/todo', { method: "POST", body: formData, headers: { 'authorization': `Bearer ${token}` } }).then((response) => response.json()).then((data) => {
+            fetch('/todo/save', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
                 //alert(data["msg"])
                 window.location.reload(); // 리로드 하지 않고 새로운 투두를 바로 html에 추가? DB에서 불러왔을 때랑 순서가 다르면 안될텐데...
             })
@@ -248,30 +234,32 @@
         // ToDo 내용을 공유 할 ID를 표시하고, ID 선택 시 해당 ID와 ToDo 내용을 /share에 전달
         function shareIdList(event) {
             // ToDo 내용을 toDo에 저장
-            let toDo = event.target.closest('h2').value
+            //console.log(event.target.closest('li').querySelector('h2').textContent.trim().slice(2))
+            let toDo = event.target.closest('li').querySelector('h2').textContent.trim().slice(2)
             // ToDo 를 감싸고 있는 li 태그 id를 찾아서,
             let toDoId = event.target.closest('li').id
             // 그 안 어딘가에 share버튼을 눌렀을 때 공유할 user id 리스트를 추가해줄 div 를 id=userList로 하나 만들고
-            document.querySelector(`#${toDoId}`).insertAdjacentHTML('beforeend', "<div id=userList></div>")
+            document.querySelector(`#${toDoId}`).insertAdjacentHTML('beforeend', `<div id=usersList></div>`)
             console.log(toDo)
-            const token = getTokenFromCookie()
             // /share에 GET요청으로 사용자 id 어레이를 가져와서, id를 클릭하면 sharing(user, todo 내용) 함수가 실행되도록 함
-            fetch('/share', { headers: { 'authorization': `Bearer ${token}` } }).then(res => res.json()).then(data => {
-                //console.log(data['get'])
-                let usersId = data['get']
-                usersId.forEach(user => {
-                    let usersListHTML = `<li onclick=sharing(${user}, ${toDo})>${user}</li>`
-                    document.querySelector("#usersList").insertAdjacentHTML('beforeend', usersListHTML)
+            fetch('/todo/share')
+                .then(res => res.json())
+                .then((data) => {
+                    console.log(data['result'])
+                    let usersId = data['result']
+                    usersId.forEach(user => {
+                        let usersListHTML = `<li onclick="sharing('${user}', '${toDo}')">${user}</li>`
+                        document.querySelector("#usersList").insertAdjacentHTML('beforeend', usersListHTML)
+                    })
                 })
-            })
         }
 
-        // 공유할 user id와 toDo 내요을 전달받으면 formData로 /share에 POST 요청하고, 응답 확인 후 공유할 대상 아이디 리스트 HTML 태그 삭제
+        // 공유할 user id와 toDo 내용을 전달받으면 formData로 /share에 POST 요청하고, 응답 확인 후 공유할 대상 아이디 리스트 HTML 태그 삭제
         function sharing(user, toDo) {
             let formData = new FormData()
-            formData.append("shareIdTo", user)
+            formData.append("receiverId", user)
             formData.append("toDo", toDo)
-            fetch('/share', { method: "POST", body: formData, headers: { 'authorization': `Bearer ${token}` } }).then(res => res.json()).then(data => {
+            fetch('/todo/share', { method: "POST", body: formData, }).then(res => res.json()).then((data) => {
                 console.log(data['res'])
                 // 공유 완료 확인?
                 document.querySelector("#usersList").remove()

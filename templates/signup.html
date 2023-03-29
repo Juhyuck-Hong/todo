@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+    <head>
+
+        <!-- Webpage Title -->
+        <title>Hello, world!</title>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bulma CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+        <!-- JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+
+        <script>
+            // 간단한 회원가입 함수입니다.
+            // 아이디, 비밀번호를 받아 DB에 저장합니다.
+            function register() {
+                let formData = new FormData()
+                let userId = document.querySelector("#userid").value
+                let password = document.querySelector("#userpw").value
+                formData.append("userId", userId)
+                formData.append("password", password)
+                fetch('/auth/registration', { method: "POST", body: formData, })
+                .then(res => res.json())
+                .then((data) => {
+                    if (data["result"] == 'success'){
+                        alert("회원가입 완료")
+                        document.cookie = `token=${data['token']}`
+                        window.location.href = '/'
+                    } else {
+                        alert(data["result"])
+                    }
+                })
+            }
+
+        </script>
+    </head>
+    <body>
+        <div class="section has-text-centered">
+            <h1 class="title">회원가입 페이지</h1>
+            <div class="container" style="width:60%">
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label" for="userid">ID</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <div class="control">
+                                <input type="text" class="input" id="userid" aria-describedby="emailHelp"
+                                       placeholder="My ID">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label" for="userpw">PW</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <div class="control">
+                                <input type="password" class="input" id="userpw" placeholder="My Password">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="button is-primary" onclick="register()">회원가입</button>
+            </div>
+        </div>
+    </body>
+</html>
