@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="TBD">
+    <meta property="og:image" content="TBD">
+    <meta property="og:description" content="TBD">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet" />
+
+    <title>TBD</title>
+
+    <style>
+        * {
+            font-family: "Gowun Dodum", sans-serif;
+        }
+
+        .top {
+            width: 100%;
+            height: 200px;
+
+            background-image: linear-gradient(0deg,
+                    rgba(0, 0, 0, 0.5),
+                    rgba(0, 0, 0, 0.5)),
+                url("");
+            background-position: center;
+            background-size: cover;
+
+            color: white;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top>h1 {
+            font-size: 30px;
+        }
+
+        .middle {
+            width: 95%;
+            max-width: 700px;
+            padding: 5px;
+            box-shadow: 0px 0px 2px 0px lightgrey;
+            margin: 20px auto;
+        }
+
+        .myToDo {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .myToDo>input {
+            width: 70%;
+        }
+
+        .bottom>li {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 10px;
+            min-height: 48px;
+        }
+
+        .bottom>li>h2 {
+            max-width: 75%;
+            font-size: 20px;
+            font-weight: 500;
+            margin-right: auto;
+            margin-bottom: 0px;
+        }
+
+        .bottom>li>h2.done {
+            text-decoration: line-through;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            showTodo();
+        });
+
+        function userCheck() {
+            // JWT
+            let userStatusHTML =`
+                <div class="signin">
+                    <a onclick="">sign in</a>
+                </div>
+                <div class="signup">
+                    <a onclick="">sign up</a>
+                </div>`
+        }
+
+        function showTodo() {
+            fetch('/todo').then(res => res.json()).then(data => {
+                //console.log(data['get'])
+                let res = data['get']
+                res.forEach(element => {
+                    let toDoId = element['_id']
+                    let toDo = element['todo']
+                    let status = element['status']
+                    
+                    let toDoListHTML = makeToDoList(toDoId, toDo, Status)
+                    document.querySelector("#toDoList").insertAdjacentHTML('beforeend', toDoListHTML)
+                });
+            })
+        }
+
+        function makeBucketList(toDoId, toDo, status) {
+            let toDoClass = ""
+            let toDoChangeStatus = "완료"
+            let toDoChangeButton = "primary"
+
+            if (status) {
+                toDoClass = 'class="done"'
+                toDoChangeStatus = "취소"
+                toDoChangeButton = "danger"
+            } 
+
+            let toDoListHTML = `
+                        <li id=${toDoId}>
+                            <h2 ${toDoClass}>✅ ${toDo}</h2>
+                            <button type="button" class="btn btn-outline-${toDoChangeButton}" onclick="toggleStatus(event)">${toDoChangeStatus}</button>
+                            <button type="button" class="btn btn-outline-dark" onclick="deleteToDo(event)" style="margin: 0px 0px 0px 2px;">삭제</button>
+                        </li>`
+            
+            return toDoListHTML
+        }
+
+        function toggleStatus(event) {
+            let toDoId = event.target.closest('li').id;
+            //console.log(event.target.closest('li').id)
+            let formData = new FormData();
+            formData.append("_id", toDoId)
+            fetch('/toggle', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+                //console.log(data["msg"])
+                window.location.reload(); // 리로드 하지 않고, class와 버튼을 토글시키는 것이 더 좋을 것 같긴 한데...
+            });
+        }
+
+        function deleteToDo(event) {
+            let toDoId = event.target.closest('li').id;
+            //console.log(event)
+            let formData = new FormData();
+            formData.append("_id", toDoId)
+            fetch('/delete', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+                //console.log(data["msg"])
+                window.location.reload(); // 리로드 하지않고 없애는 방법? querySelector로 해당 id html 삭제할 수 있지 않을까
+            });
+        }
+
+        function saveToDo() {
+            let toDo = document.querySelector("#toDo").value;
+            let status = 0;
+            let formData = new FormData();
+            formData.append("toDo", toDo);
+            formData.append("status", status);
+            fetch('/todo', { method: "POST", body: formData, }).then((response) => response.json()).then((data) => {
+                //alert(data["msg"])
+                window.location.reload(); // 리로드 하지 않고 새로운 투두를 바로 html에 추가? DB에서 불러왔을 때랑 순서가 다르면 안될텐데...
+            });
+        }
+        
+        function shareIdList() {
+            fetch('/share').then(res => res.json()).then(data => {
+                //console.log(data['get'])
+                let res = data['get']
+                res.forEach(element => {
+                    let usersId = element['usersId']
+                    let usersListHTML = `${usersId}` // <div>로 감싸고, 개별 아이디 를 클릭했을 때 해당 아이디를 전달하는 함수 onclick 추가해야 함
+                    document.querySelector("#usersList").insertAdjacentHTML('beforeend', usersListHTML)
+                });
+            })
+        }
+    </script>
+</head>
+
+<body>
+    <div class="top">
+        <div class="sign" id="userStatus">
+        </div>
+        <h1>ToDo</h1>
+    </div>
+    <div class="middle">
+        <div class="myToDo">
+            <input id="toDo" class="form-control" type="text" placeholder="해야 할 일을 기록하세요" />
+            <button onclick="saveToDo()" type="button" class="btn btn-outline-primary">기록하기</button>
+        </div>
+    </div>
+    <div class="bottom" id="toDoList">
+    </div>
+</body>
+
+</html>
