@@ -82,7 +82,8 @@ def getUserId():
         return redirect(url_for("signinpage", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
         # 잘못된 token이라면 signin 페이지로 리디렉팅
-        return redirect(url_for("signinpage", msg="로그인 정보가 존재하지 않습니다."))
+        #return redirect(url_for("signinpage", msg="로그인 정보가 존재하지 않습니다."))
+        return jsonify({'result': 'failed', 'userId': None})
 
 # 유저 로그인
 @app.route("/auth/signin", methods=["POST"])
@@ -97,7 +98,6 @@ def signin():
     print(res)
     # 만약에 해당 아이디와 비밀번호가 있다면,
     if res is not None:
-        print(1)
         # JWT 토큰을 생성
         payload = {'id': id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=3600)}
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
@@ -106,7 +106,6 @@ def signin():
         return jsonify({'result': 'success', 'token': token})
     # 해당 아이디와 비밀번호가 없다면,
     else:
-        print(2)
         # 아이디/비밀번호 미일치 메세지와 result fail 전달
         return jsonify({'result': 'failed', 'msg': "아이디/비밀번호가 일치하지 않습니다."})
 

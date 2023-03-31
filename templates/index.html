@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta property="og:type" content="website">
-    <meta property="og:title" content="TBD">
+    <meta property="og:title" content="DoTogether">
     <meta property="og:image" content="TBD">
     <meta property="og:description" content="TBD">
 
@@ -19,11 +19,19 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet" />
 
-    <title>TBD</title>
+    <title>DoTogether</title>
 
     <style>
         * {
             font-family: "Gowun Dodum", sans-serif;
+        }
+
+        .imageLanding {
+            max-width: 100%;
+            max-height: 100%;
+            background-image: url("https://img.freepik.com/free-vector/people-making-list-illustration_53876-64623.jpg?w=996&t=st=1680265173~exp=1680265773~hmac=fedd4d205c907f2b97c676c46b7942e455386ca6f6c5bd1ff426803266e6e10b");
+            background-position: center;
+            background-size: contain;
         }
 
         .top {
@@ -69,12 +77,13 @@
         }
 
         .bottom>li {
+            max-width: 700px;
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
 
-            margin-bottom: 10px;
+            margin: 10px auto;
             min-height: 48px;
         }
 
@@ -104,35 +113,39 @@
                 .then((data) => {
                     userId = data['userId']
                     console.log(userId)
-
                     if (userId) {
-                        console.log("asdf")
                         let userStatusHTML = `
-                            <div>
-                                <p class="showUserId">Hi! ${userId}, </p>
-                            </div>
-                            <div class="signout">
-                                <a onclick=signOut()>sign out</a>
-                            </div>`
+                        <div style="margin-bottom: 10px;">
+                                <small>
+                                    <em class="showUserId">Hi! ${userId}</em>
+                                    <span> / </span>
+                                    <em onclick=signOut()>sign out</em>
+                                    <hr>
+                                </small>
+                        </div>`
                         document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
                         showToDo()
                     } else {
-                        console.log("qwer")
+
                         let userStatusHTML = `
-                            <div class="signin">
-                                <a onclick=signIn()>sign in</a>
-                            </div>
-                            <div class="signup">
-                                <a onclick=signUp()>sign up</a>
+                        <div style="margin-bottom: 10px;">
+                                <small>
+                                    <em onclick=signIn()>sign in</em>
+                                    <span> / </span>
+                                    <em onclick=signUp()>sign up</em>
+                                    <hr>
+                                </small>
                             </div>`
                         document.querySelector("#userStatus").insertAdjacentHTML('beforeend', userStatusHTML)
                         document.querySelector(".middle").remove()
-                        let imageHTML = `
-                <img class=imageLanding src="" alt=""/>`
+                        let imageHTML = `<div class="imageLanding">
+                            <br><br><br><br><br><br><br><br><br><br><br>
+                            <br><br><br><br><br><br><br><br><br><br><br>
+                            <br><br><br><br><br><br><br><br><br><br><br>
+                            </div>`
                         document.querySelector(".bottom").insertAdjacentHTML("beforeend", imageHTML)
                     }
                 })
-
         }
 
         function signIn() {
@@ -149,7 +162,9 @@
             window.location.replace('/')
         }
 
-        // ToDo 항목의 아이디, 내용, 상태의 어레이를 반환 받아 나열하는 HTML을 만들어 id=toDoList 에 하나씩 반복 추가
+        /*
+        ToDo 항목의 아이디, 내용, 상태의 어레이를 반환 받아 나열하는 HTML을 만들어 id=toDoList 에 하나씩 반복 추가
+        */
         function showToDo() {
             fetch('/todo/list').then(res => res.json()).then(data => {
                 //console.log(data['get'])
@@ -179,19 +194,23 @@
                 toDoChangeButton = "danger"
             }
 
+            if (sharedId) {} else {sharedId=""}
+
             let toDoListHTML = `
                         <li id="id${toDoId}">
                             <h2 ${toDoClass}>✅ ${toDo}</h2>
                             <h5 class=shared> ${sharedId} </h5>
-                            <button type="button" class="btn btn-outline-success" onclick="shareIdList(event)">공유</button>
-                            <button type="button" class="btn btn-outline-${toDoChangeButton}" onclick="toggleStatus(event)">${toDoChangeStatus}</button>
-                            <button type="button" class="btn btn-outline-dark" onclick="deleteToDo(event)" style="margin: 0px 0px 0px 2px;">삭제</button>
+                            <button type="button" class="btn btn-outline-success" onclick="shareIdList(event)" style="margin: 0px 1px;">공유</button>
+                            <button type="button" class="btn btn-outline-${toDoChangeButton}" onclick="toggleStatus(event)" style="margin: 0px 1px;">${toDoChangeStatus}</button>
+                            <button type="button" class="btn btn-outline-dark" onclick="deleteToDo(event)" style="margin: 0px 1px;">삭제</button>
                         </li>`
 
             return toDoListHTML
         }
-
-        // ToDo 내용을 완료 표시 또는 완료 표시를 취소
+        
+        /*
+        ToDo 내용을 완료 표시 또는 완료 표시를 취소
+        */
         function toggleStatus(event) {
             let toDoId = event.target.closest('li').id
             //console.log(event.target.closest('li').id)
@@ -272,7 +291,7 @@
     <div class="top">
         <div class="sign" id="userStatus">
         </div>
-        <h1>ToDo</h1>
+        <h1>DoTogether</h1>
     </div>
     <div class="middle">
         <div class="myToDo">
@@ -280,6 +299,7 @@
             <button onclick="saveToDo()" type="button" class="btn btn-outline-primary">기록하기</button>
         </div>
     </div>
+    <div></div>
     <div class="bottom" id="toDoList">
     </div>
 </body>

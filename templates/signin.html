@@ -2,28 +2,26 @@
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="DoTogether">
+    <meta property="og:image" content="TBD">
+    <meta property="og:description" content="TBD">
 
-    <!-- Webpage Title -->
-    <title>로그인 페이지</title>
-
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bulma CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
-    <!-- JS -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <title>DoTogether</title>
 
     <script>
-        // ['쿠키'라는 개념에 대해 알아봅시다]
-        // 로그인을 구현하면, 반드시 쿠키라는 개념을 사용합니다.
-        // 페이지에 관계없이 브라우저에 임시로 저장되는 정보입니다. 키:밸류 형태(딕셔너리 형태)로 저장됩니다.
-        // 쿠키가 있기 때문에, 한번 로그인하면 네이버에서 다시 로그인할 필요가 없는 것입니다.
-        // 브라우저를 닫으면 자동 삭제되게 하거나, 일정 시간이 지나면 삭제되게 할 수 있습니다.
+        // 로그인을 위한 함수
         function signin() {
+            // formData에 아이디와 비밀번호를 넣어서
             formData = new FormData()
             let userId = document.querySelector("#userid").value
             console.log(userId)
@@ -31,60 +29,55 @@
             console.log(password)
             formData.append("userId", userId)
             formData.append("password", password)
+            // POST로 /auth/signin에 보냄
             fetch('/auth/signin', { method: "POST", body: formData })
                 .then(res => res.json())
                 .then((data) => {
                     console.log(data)
+                    // 로그인 성공하면, 성공 메세지와 함께 토큰을 받아 쿠키에 저장 후 /로 이동
                     if (data['result'] == 'success') {
                         document.cookie = `token=${data['token']}`
                         window.location.href = '/'
+                        // 로그인 실패하면 실패 메세지를 alert
                     } else {
                         alert(data['msg'])
                     }
                 })
         }
 
+        // 회원 가입을 원할 경우 회원가입 페이지로 리디렉팅
         function signup() {
             window.location.href = "/signup"
         }
-
     </script>
-
 </head>
 
 <body>
-    <div class="section has-text-centered">
-        <h1 class="title">로그인 페이지</h1>
-        <div class="container" style="width:60%">
-            <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                    <label class="label" for="userid">ID</label>
-                </div>
-                <div class="field-body">
-                    <div class="field">
-                        <div class="control">
-                            <input type="text" class="input" id="userid" aria-describedby="emailHelp"
-                                placeholder="My ID">
-                        </div>
-                    </div>
+    <h1 class="d-flex justify-content-center" style="margin-top: 20px;">로그인</h1>
+    <form>
+        <div style="margin-top: 50px;">
+            <div class="col d-flex justify-content-center">
+                <!-- 사용자 아이디 입력란 -->
+                <div class="form-outline mb-4">
+                    <input type="text" id="userid" class="form-control" placeholder="아이디" />
                 </div>
             </div>
-            <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                    <label class="label" for="userpw">PW</label>
-                </div>
-                <div class="field-body">
-                    <div class="field">
-                        <div class="control">
-                            <input type="password" class="input" id="userpw" placeholder="My Password">
-                        </div>
-                    </div>
+            <div class="col d-flex justify-content-center">
+                <!-- 비밀번호 입력란 -->
+                <div class="form-outline mb-4">
+                    <input type="password" id="userpw" class="form-control" placeholder="비밀번호" />
                 </div>
             </div>
-            <button class="button is-primary" onclick="signup()">회원가입</button>
-            <button class="button is-primary" onclick="signin()">로그인</button>
-        </div>
-    </div>
+            <div class="col d-flex justify-content-center">
+                <!-- 회원가입 버튼 -->
+                <button type="button" class="btn btn-primary btn-block mb-4" onclick="signin()">로그인</button>
+            </div>
+
+            <div class="col d-flex justify-content-center">
+                <!-- 회원가입 버튼 -->
+                <button type="button" class="btn btn-primary btn-block mb-4" onclick="signup()">가입하기</button>
+            </div>
+    </form>
 </body>
 
 </html>
