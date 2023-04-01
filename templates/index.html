@@ -194,12 +194,12 @@
                 toDoChangeButton = "danger"
             }
 
-            if (sharedId) {} else {sharedId=""}
+            if (sharedId) {sharedId = "from " + sharedId} else {sharedId=""}
 
             let toDoListHTML = `
                         <li id="id${toDoId}">
                             <h2 ${toDoClass}>✅ ${toDo}</h2>
-                            <h5 class=shared> ${sharedId} </h5>
+                            <em class=shared style="margin: 0px 5px;"> ${sharedId} </em>
                             <button type="button" class="btn btn-outline-success" onclick="shareIdList(event)" style="margin: 0px 1px;">공유</button>
                             <button type="button" class="btn btn-outline-${toDoChangeButton}" onclick="toggleStatus(event)" style="margin: 0px 1px;">${toDoChangeStatus}</button>
                             <button type="button" class="btn btn-outline-dark" onclick="deleteToDo(event)" style="margin: 0px 1px;">삭제</button>
@@ -280,7 +280,6 @@
             formData.append("toDo", toDo)
             fetch('/todo/share', { method: "POST", body: formData, }).then(res => res.json()).then((data) => {
                 console.log(data['res'])
-                // 공유 완료 확인?
                 document.querySelector("#usersList").remove()
             })
         }

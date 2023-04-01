@@ -1,16 +1,13 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from bson.objectid import ObjectId
 from pymongo import MongoClient
-from pprint import pprint
-import json
-import certifi
 import jwt
 import datetime
 import hashlib
 
 app = Flask(__name__)
 
-client = MongoClient(f'mongodb+srv://juhyukhong:juhyukhong@juhyukhong.q0dawlr.mongodb.net/?retryWrites=true&w=majority')
+client = MongoClient('mongodb+srv://juhyukhong:juhyukhong@juhyukhong.q0dawlr.mongodb.net/?retryWrites=true&w=majority')
 db = client.sharabletodo
 
 SECRET_KEY = 'SPARTA'
@@ -61,6 +58,7 @@ def registration():
         # 저장 후 JWT 토큰을 생성해서,
         payload = {'id': userId, 'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=3600)}
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+        print(type(token))
         # 성공 메시지와 토큰을 반환
         return jsonify({'result': 'success', 'token': token})
     except Exception as e:
@@ -79,7 +77,7 @@ def getUserId():
         return jsonify({'result': 'success', 'userId': payload['id']})
     except jwt.ExpiredSignatureError:
         # 만료된 token이라면 signin 페이지로 리디렉팅
-        return redirect(url_for("signinpage", msg="로그인 시간이 만료되었습니다."))
+        return jsonify({'result': 'failed', 'userId': None})
     except jwt.exceptions.DecodeError:
         # 잘못된 token이라면 signin 페이지로 리디렉팅
         #return redirect(url_for("signinpage", msg="로그인 정보가 존재하지 않습니다."))
@@ -95,13 +93,12 @@ def signin():
     pw_hash = hashlib.sha256(pw.encode('utf-8')).hexdigest()
     # 아이디, 암호화된 비밀번호로 유저를 찾기
     res = db.user.find_one({'id': id, 'pw': pw_hash})
-    print(res)
     # 만약에 해당 아이디와 비밀번호가 있다면,
     if res is not None:
         # JWT 토큰을 생성
         payload = {'id': id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=3600)}
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-        print(token)
+        print(type(token))
         # token을 반환
         return jsonify({'result': 'success', 'token': token})
     # 해당 아이디와 비밀번호가 없다면,
@@ -151,7 +148,7 @@ def showToDo():
         # DB의 고유 _id값은 object이므로 str으로 변환해야 jsonify가능, str으로 변환 
         for i in all_list:
             i['_id'] = str(i['_id'])
-        print(all_list)
+        #print(all_list)
         # 반환
         return jsonify({'result': all_list})
     except jwt.ExpiredSignatureError:
@@ -171,7 +168,7 @@ def toggle():
         _ = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         # POST로 받은 toDoId를 변수에 저장해서,
         todo_id = request.form["toDoId"]
-        print(todo_id)
+        #print(todo_id)
         # 해당 toDoId를 todoList DB에서 검색한 다음 status만 변수에 저장하고
         status = db.todoList.find_one({'_id': ObjectId(todo_id)})['status']
         # 해당 toDoId를 가진 데이터에서 status의 반대값으로 status를 업데이트 
