@@ -26,6 +26,16 @@
             font-family: "Gowun Dodum", sans-serif;
         }
 
+        li::marker {
+            color: grey;
+            font-size: 0.5em;
+            font-weight: bold;
+        }
+
+        .usersList {
+            margin-left: 5px;
+        }
+
         .imageLanding {
             max-width: 100%;
             max-height: 100%;
@@ -97,6 +107,9 @@
 
         .bottom>li>h2.done {
             text-decoration: line-through;
+        }
+        .bottom>li>h2.do {
+            text-decoration: none;
         }
     </style>
     <script>
@@ -184,7 +197,7 @@
 
         // ToDo 리스트의 한줄씩 만들어주는 함수
         function makeToDoList(toDoId, toDo, status, sharedId) {
-            let toDoClass = ""
+            let toDoClass = 'class="do"'
             let toDoChangeStatus = "완료"
             let toDoChangeButton = "primary"
 
@@ -194,33 +207,47 @@
                 toDoChangeButton = "danger"
             }
 
-            if (sharedId) {sharedId = "from " + sharedId} else {sharedId=""}
+            if (sharedId) { sharedId = "from " + sharedId } else { sharedId = "" }
 
             let toDoListHTML = `
                         <li id="id${toDoId}">
-                            <h2 ${toDoClass}>✅ ${toDo}</h2>
-                            <em class=shared style="margin: 0px 5px;"> ${sharedId} </em>
-                            <button type="button" class="btn btn-outline-success" onclick="shareIdList(event)" style="margin: 0px 1px;">공유</button>
-                            <button type="button" class="btn btn-outline-${toDoChangeButton}" onclick="toggleStatus(event)" style="margin: 0px 1px;">${toDoChangeStatus}</button>
-                            <button type="button" class="btn btn-outline-dark" onclick="deleteToDo(event)" style="margin: 0px 1px;">삭제</button>
+                            <h2 ${toDoClass} style="margin: 1px auto auto 1px;">✅ ${toDo}</h2>
+                            <em class=shared style="margin: 1px 5px auto 1px;"> ${sharedId} </em>
+                            <button type="button" class="btn btn-outline-success" onclick="shareIdList(event)" style="margin: 1px 1px auto 1px;">공유</button>
+                            <button type="button" class="btn btn-outline-${toDoChangeButton}" onclick="toggleStatus(event)" style="margin: 1px 1px auto 1px;">${toDoChangeStatus}</button>
+                            <button type="button" class="btn btn-outline-dark" onclick="deleteToDo(event)" style="margin: 1px 1px auto 1px;">삭제</button>
                         </li>`
 
             return toDoListHTML
         }
+
         
-        /*
-        ToDo 내용을 완료 표시 또는 완료 표시를 취소
-        */
+        //ToDo 내용을 완료 또는 취소 표시로 토글, DB에 업데이트 하되, 페이지 새로고침하지 않고 class만 변경해 취소와 완료 표시를 업데이트
         function toggleStatus(event) {
-            let toDoId = event.target.closest('li').id
-            //console.log(event.target.closest('li').id)
+            // toggle을 위한 h2, button, button text dictionary
+            let toggleH2Class = {"do": "done", "done": "do"}
+            let toggleButtonClass = {"btn-outline-primary": "btn-outline-danger", "btn-outline-danger": "btn-outline-primary"}
+            let toggleButtonText = {"완료": "취소", "취소": "완료"}
+            // status toggle할 DB id 찾아서 formData에 넣기
             let formData = new FormData()
+            let toDoId = event.target.closest('li').id
             formData.append("toDoId", toDoId.slice(2))
+            // /todo/toggle에 DB id를 보내서 status toggle 하고,
             fetch('/todo/toggle', { method: "POST", body: formData, })
                 .then((response) => response.json())
                 .then((data) => {
-                    //console.log(data["msg"])
-                    window.location.reload(); // 리로드 하지 않고, class와 버튼을 토글시키는 것이 더 좋을 것 같긴 한데...
+                    // h2 class를 토글 done ↔ do
+                    let h2Element = document.getElementById(`${toDoId}`).querySelector("h2")
+                    let currentH2Class = h2Element.classList.value
+                    h2Element.classList.remove(currentH2Class)
+                    h2Element.classList.add(toggleH2Class[currentH2Class])
+                    // button class를 토글 btn-outline-primary ↔ btn-outline-danger
+                    let buttonElement = document.getElementById(`${toDoId}`).querySelector(".btn-outline-primary") || document.getElementById(`${toDoId}`).querySelector(".btn-outline-danger")
+                    let currentButtonClass = buttonElement.classList.value.split(' ')[1]
+                    buttonElement.classList.remove(currentButtonClass)
+                    buttonElement.classList.add(toggleButtonClass[currentButtonClass])
+                    // button text를 토글 완료 ↔ 취소
+                    buttonElement.innerHTML = toggleButtonText[buttonElement.innerHTML]
                 })
         }
 
@@ -250,21 +277,32 @@
             })
         }
 
-        // ToDo 내용을 공유 할 ID를 표시하고, ID 선택 시 해당 ID와 ToDo 내용을 /share에 전달
+        // ToDo 내용을 공유 할 ID를 표시하고, ID 선택 시 해당 ID와 ToDo 내용을 /todo/share에 전달
+        // 버튼 누를 때 마다 usersList를 받기엔 api 부담일 것 같아서 페이지 로드할 때 한번만 받아서 저장해두는것으로 수정하면 더 좋겠지만...?
         function shareIdList(event) {
             // ToDo 내용을 toDo에 저장
             //console.log(event.target.closest('li').querySelector('h2').textContent.trim().slice(2))
             let toDo = event.target.closest('li').querySelector('h2').textContent.trim().slice(2)
             // ToDo 를 감싸고 있는 li 태그 id를 찾아서,
             let toDoId = event.target.closest('li').id
-            // 그 안 어딘가에 share버튼을 눌렀을 때 공유할 user id 리스트를 추가해줄 div 를 id=userList로 하나 만들고
-            document.querySelector(`#${toDoId}`).insertAdjacentHTML('beforeend', `<div id=usersList></div>`)
-            console.log(toDo)
+            // 공유 버튼을 여러번 눌렸을 때 초기화 해주기 위해, 혹시 그 전에 만들어둔 usersList가 있다면 지워주고
+            let initiateList = document.querySelector("#usersList")
+            initiateList !== null ? initiateList.remove() : null
+            // toDoId가 있는 element를 찾아서
+            let toDoIdLi = document.querySelector(`#${toDoId}`)
+            // div 하나 만들어준 다음 id와 class 추가해주고,
+            let userListDiv = document.createElement("div")
+            userListDiv.setAttribute("id", "usersList")
+            userListDiv.setAttribute("class", "usersList")
+            // em 뒤에 넣어주자
+            toDoIdLi.insertBefore(userListDiv, toDoIdLi.querySelector("em").nextSibling)
+            // onclick에서 실행할 sharing()의 parameter에서, toDo 변수에 '가 들어있는 경우, 함수 parameter가 잘못 입력되지 않도록 \'로 바꿔줌
+            toDo = toDo.replace(/'/g, "\\'")
             // /share에 GET요청으로 사용자 id 어레이를 가져와서, id를 클릭하면 sharing(user, todo 내용) 함수가 실행되도록 함
             fetch('/todo/share')
                 .then(res => res.json())
                 .then((data) => {
-                    console.log(data['result'])
+                    //console.log(data['result'])
                     let usersId = data['result']
                     usersId.forEach(user => {
                         let usersListHTML = `<li onclick="sharing('${user}', '${toDo}')">${user}</li>`
